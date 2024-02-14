@@ -1,7 +1,9 @@
 const { Telegraf } = require('telegraf');
-
+const mitoken = require('./variable.js');
+module.exports = mitoken;
+console.log(mitoken);
 // Reemplaza 'TOKEN' con el token de tu bot, que obtendrás al hablar con BotFather en Telegram.
-const bot = new Telegraf('6608239042:AAH77ZLdcqT010Eujl9eHytYzpBc1faYE8A');
+const bot = new Telegraf(mitoken);
 
 // Comando /start
 bot.start((ctx) => {
@@ -19,6 +21,4 @@ bot.on('text', (ctx) => {
 });
 
 // Iniciar el bot
-bot.launch().then(() => {
-    console.log('El bot está en funcionamiento');
-});
+bot.launch();

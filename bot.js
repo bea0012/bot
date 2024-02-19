@@ -1,70 +1,98 @@
 process.noDeprecation = true;
 const { Telegraf, Markup } = require('telegraf');
-const mitoken = require('./variable.js');
-const core = require('core-js');
 const axios = require('axios');
-module.exports = mitoken;
-
+const mitoken = require('./variable.js');
+const API_KEY = 'b509df2013cf7d5813fe673b713249dc';
 
 const bot = new Telegraf(mitoken);
 
-// Saludo de presentación
+// Función para mostrar el menú principal
+const showMainMenu = (ctx) => {
+    const keyboard = Markup.keyboard([
+        ['Catálogo de Películas'],
+        ['Catálogo de Series'],
+    ]).resize();
+
+    ctx.reply('Selecciona una opción:', keyboard);
+};
+
 bot.start((ctx) => {
     ctx.reply('¡Hola! Soy tu bot de Telegram. ¡Bienvenido!');
-    enviarMenu(ctx);
+    showMainMenu(ctx);
 });
 
-// Comando /ayuda
 bot.help((ctx) => {
     ctx.reply('Puedes usar /start para comenzar y /ayuda para obtener ayuda.');
 });
 
-// Manejar botones
-bot.action('catalogoPeliculas', async (ctx) => {
+// Manejar selecciones del menú principal
+bot.hears('Catálogo de Películas', async (ctx) => {
     try {
-        const apiKeyPeliculas = 'TU_CLAVE_DE_API_DE_PELICULAS'; // Reemplaza con tu clave de API de películas
-        const respuestaPeliculas = await axios.get(`URL_DE_LA_API_DE_PELICULAS_EN_CARTELERA?api_key=${apiKeyPeliculas}&otros_parametros`);
-        const catalogo = respuestaPeliculas.data; // Ajusta según la respuesta de la API
-        ctx.reply(`Catálogo de Películas en Cartelera:\n${JSON.stringify(catalogo, null, 2)}`);
+        // Lógica para mostrar el catálogo de películas
+        const response = await axios.get('https://api.themoviedb.org/3/movie/popular', {
+            params: {
+                api_key: API_KEY,
+            },
+        });
+
+        const movies = response.data.results;
+
+        const buttons = movies.map((movie) => {
+            return Markup.button.callback(movie.title, `movie_${movie.id}`);
+        });
+
+        const keyboard = Markup.inlineKeyboard(buttons, { columns: 2 });
+
+        ctx.reply('Catálogo de Películas:', keyboard);
     } catch (error) {
         console.error(error);
-        ctx.reply('Ocurrió un error al obtener el catálogo de películas.');
+        ctx.reply('Hubo un error al obtener el catálogo de películas. Por favor, intenta de nuevo más tarde.');
     }
 });
 
-bot.action('verTiempo', async (ctx) => {
+bot.hears('Catálogo de Series', async (ctx) => {
     try {
-        const apiKeyTiempo = 'TU_CLAVE_DE_API_DEL_TIEMPO'; // Reemplaza con tu clave de API del tiempo
-        const ciudad = 'NombreDeLaCiudad'; // Reemplaza con el nombre de la ciudad
-        const respuestaTiempo = await axios.get(`URL_DE_LA_API_DEL_TIEMPO?api_key=${apiKeyTiempo}&ciudad=${ciudad}&otros_parametros`);
-        const informacionTiempo = respuestaTiempo.data; // Ajusta según la respuesta de la API
-        ctx.reply(`Información del Tiempo:\n${JSON.stringify(informacionTiempo, null, 2)}`);
+        // Lógica para mostrar el catálogo de series
+        const response = await axios.get('https://api.themoviedb.org/3/tv/popular', {
+            params: {
+                api_key: API_KEY,
+            },
+        });
+
+        const series = response.data.results;
+
+        const buttons = series.map((serie) => {
+            return Markup.button.callback(serie.name, `series_${serie.id}`);
+        });
+
+        const keyboard = Markup.inlineKeyboard(buttons, { columns: 2 });
+
+        ctx.reply('Catálogo de Series:', keyboard);
     } catch (error) {
         console.error(error);
-        ctx.reply('Ocurrió un error al obtener la información del tiempo.');
+        ctx.reply('Hubo un error al obtener el catálogo de series. Por favor, intenta de nuevo más tarde.');
     }
 });
 
-bot.action('verNoticias', async (ctx) => {
-    try {
-        const apiKeyNoticias = 'TU_CLAVE_DE_API_DE_NOTICIAS'; // Reemplaza con tu clave de API de noticias
-        const respuestaNoticias = await axios.get(`URL_DE_LA_API_DE_NOTICIAS?api_key=${apiKeyNoticias}&otros_parametros`);
-        const noticias = respuestaNoticias.data; // Ajusta según la respuesta de la API
-        ctx.reply(`Últimas Noticias:\n${JSON.stringify(noticias, null, 2)}`);
-    } catch (error) {
-        console.error(error);
-        ctx.reply('Ocurrió un error al obtener las últimas noticias.');
-    }
+// Acciones para detalles de películas y series
+bot.action(/movie_(\d+)/, async (ctx) => {
+    const movieId = ctx.match[1];
+    const movieLink = `https://www.themoviedb.org/movie/${movieId}`;
+
+    // Enviar el enlace directo a la página de la película
+    ctx.reply(`Enlace a la película: ${movieLink}`);
 });
 
-// Función para enviar el menú con los botones
-function enviarMenu(ctx) {
-    ctx.reply('Selecciona una opción:', Markup.inlineKeyboard([
-        Markup.button.callback('Catálogo de Películas', 'catalogoPeliculas'),
-        Markup.button.callback('Ver Tiempo', 'verTiempo'),
-        Markup.button.callback('Ver Noticias', 'verNoticias'),
-    ]));
-}
+bot.action(/series_(\d+)/, async (ctx) => {
+    const seriesId = ctx.match[1];
+    const seriesLink = `https://www.themoviedb.org/tv/${seriesId}`;
 
-// Iniciar el bot
+    // Enviar el enlace directo a la página de la serie
+    ctx.reply(`Enlace a la serie: ${seriesLink}`);
+});
+
+bot.on('text', (ctx) => {
+    ctx.reply(`Recibí tu mensaje: ${ctx.message.text}`);
+});
+
 bot.launch();

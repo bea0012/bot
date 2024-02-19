@@ -11,7 +11,7 @@ const axios = require('axios');
 const mitoken = require('./variable.js');
 
 // Configurar token de la API de TMDb
-const API_KEY = 'b509df2013cf7d5813fe673b713249dc';
+const API_KEY = mitoken;
 
 // Crear instancia de Telegraf (bot)
 const bot = new Telegraf(mitoken);

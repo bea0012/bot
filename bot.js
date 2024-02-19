@@ -8,15 +8,15 @@ const bot = new Telegraf(mitoken);
 
 const showMainMenu = (ctx) => {
     const keyboard = Markup.keyboard([
-        ['Películas Populares', 'Películas Mejor Puntuadas'],
-        ['Series Populares'],
+        ['🎬Películas Populares', '🏆Películas Mejor Puntuadas'],
+        ['📺Series Populares'],
     ]).resize();
 
-    ctx.reply('¿Qué quieres ver hoy?:', keyboard);
+    ctx.reply('¿Qué quieres ver hoy?👀:', keyboard);
 };
 
 bot.start((ctx) => {
-    ctx.reply('¡Hola! Soy tu solución, que eres más de ¿pelis o series? Eso da igual porqué aquí podrás encontrar de todo, investiga y descubre que serie deberías empezar o que película te estas perdiendo. ¡Bienvenido a ¿Peli o Serie?!');
+    ctx.reply('¡Hola! Soy tu solución, que eres más de ¿🍿pelis o 📺series? Eso da igual porqué aquí podrás encontrar de todo, investiga y descubre que serie deberías empezar o que película te estas perdiendo. ¡Bienvenido a ¿Peli o Serie?!');
     showMainMenu(ctx);
 });
 
@@ -44,19 +44,19 @@ const fetchMovies = async (url, ctx, title) => {
         ctx.reply(title, keyboard);
     } catch (error) {
         console.error(error);
-        ctx.reply(`Hubo un error al obtener el catálogo de ${title}. Por favor, intenta de nuevo más tarde.`);
+        ctx.reply(`Hubo un error al obtener el catálogo de ${title}. Por favor, intenta de nuevo más tarde.🚧`);
     }
 };
 
-bot.hears('Películas Populares', async (ctx) => {
-    await fetchMovies('https://api.themoviedb.org/3/movie/popular', ctx, 'Películas Populares');
+bot.hears('🎬Películas Populares', async (ctx) => {
+    await fetchMovies('https://api.themoviedb.org/3/movie/popular', ctx, '🎬Películas Populares');
 });
 
-bot.hears('Películas Mejor Puntuadas', async (ctx) => {
-    await fetchMovies('https://api.themoviedb.org/3/movie/top_rated', ctx, 'Películas Mejor Puntuadas');
+bot.hears('🏆Películas Mejor Puntuadas', async (ctx) => {
+    await fetchMovies('https://api.themoviedb.org/3/movie/top_rated', ctx, '🏆Películas Mejor Puntuadas');
 });
 
-bot.hears('Series Populares', async (ctx) => {
+bot.hears('📺Series Populares', async (ctx) => {
     try {
         const response = await axios.get('https://api.themoviedb.org/3/tv/top_rated', {
             params: {
@@ -72,7 +72,7 @@ bot.hears('Series Populares', async (ctx) => {
 
         const keyboard = Markup.inlineKeyboard(buttons, { columns: 2 });
 
-        ctx.reply('Series Populares:', keyboard);
+        ctx.reply('📺Series Populares:', keyboard);
     } catch (error) {
         console.error(error);
         ctx.reply('Hubo un error al obtener el catálogo de series. Por favor, intenta de nuevo más tarde.');

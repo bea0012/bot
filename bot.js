@@ -9,11 +9,36 @@ const bot = new Telegraf(mitoken);
 // Función para mostrar el menú principal
 const showMainMenu = (ctx) => {
     const keyboard = Markup.keyboard([
-        ['Catálogo de Películas'],
-        ['Catálogo de Series'],
+        ['Películas Populares', 'Películas Mejor Puntuadas'],
+        ['Series Populares', 'Series Mejor Puntuadas'],
     ]).resize();
 
     ctx.reply('Selecciona una opción:', keyboard);
+};
+
+const fetchMoviesOrSeries = async (url, ctx, title) => {
+    try {
+        const response = await axios.get(url, {
+            params: {
+                api_key: API_KEY,
+            },
+        });
+
+        console.log('API Response Headers:', response.headers); // Añade este log para verificar los encabezados de respuesta.
+
+        const items = response.data.results;
+
+        const buttons = items.map((item) => {
+            return Markup.button.callback(item.title || item.name, `${title.toLowerCase()}_${item.id}`);
+        });
+
+        const keyboard = Markup.inlineKeyboard(buttons, { columns: 2 });
+
+        ctx.reply(title, keyboard);
+    } catch (error) {
+        console.error(error);
+        ctx.reply(`Hubo un error al obtener el catálogo de ${title}. Por favor, intenta de nuevo más tarde.`);
+    }
 };
 
 bot.start((ctx) => {
@@ -25,74 +50,22 @@ bot.help((ctx) => {
     ctx.reply('Puedes usar /start para comenzar y /ayuda para obtener ayuda.');
 });
 
-// Manejar selecciones del menú principal
-bot.hears('Catálogo de Películas', async (ctx) => {
-    try {
-        // Lógica para mostrar el catálogo de películas
-        const response = await axios.get('https://api.themoviedb.org/3/movie/popular', {
-            params: {
-                api_key: API_KEY,
-            },
-        });
-
-        const movies = response.data.results;
-
-        const buttons = movies.map((movie) => {
-            return Markup.button.callback(movie.title, `movie_${movie.id}`);
-        });
-
-        const keyboard = Markup.inlineKeyboard(buttons, { columns: 2 });
-
-        ctx.reply('Catálogo de Películas:', keyboard);
-    } catch (error) {
-        console.error(error);
-        ctx.reply('Hubo un error al obtener el catálogo de películas. Por favor, intenta de nuevo más tarde.');
-    }
+bot.hears('Películas Populares', async (ctx) => {
+    await fetchMoviesOrSeries('https://api.themoviedb.org/3/movie/popular', ctx, 'Películas Populares');
 });
 
-bot.hears('Catálogo de Series', async (ctx) => {
-    try {
-        // Lógica para mostrar el catálogo de series
-        const response = await axios.get('https://api.themoviedb.org/3/tv/popular', {
-            params: {
-                api_key: API_KEY,
-            },
-        });
-
-        const series = response.data.results;
-
-        const buttons = series.map((serie) => {
-            return Markup.button.callback(serie.name, `series_${serie.id}`);
-        });
-
-        const keyboard = Markup.inlineKeyboard(buttons, { columns: 2 });
-
-        ctx.reply('Catálogo de Series:', keyboard);
-    } catch (error) {
-        console.error(error);
-        ctx.reply('Hubo un error al obtener el catálogo de series. Por favor, intenta de nuevo más tarde.');
-    }
+bot.hears('Películas Mejor Puntuadas', async (ctx) => {
+    await fetchMoviesOrSeries('https://api.themoviedb.org/3/movie/top_rated', ctx, 'Películas Mejor Puntuadas');
 });
 
-// Acciones para detalles de películas y series
-bot.action(/movie_(\d+)/, async (ctx) => {
-    const movieId = ctx.match[1];
-    const movieLink = `https://www.themoviedb.org/movie/${movieId}`;
-
-    // Enviar el enlace directo a la página de la película
-    ctx.reply(`Enlace a la película: ${movieLink}`);
+bot.hears('Series Populares', async (ctx) => {
+    await fetchMoviesOrSeries('https://api.themoviedb.org/3/tv/popular', ctx, 'Series Populares');
 });
 
-bot.action(/series_(\d+)/, async (ctx) => {
-    const seriesId = ctx.match[1];
-    const seriesLink = `https://www.themoviedb.org/tv/${seriesId}`;
-
-    // Enviar el enlace directo a la página de la serie
-    ctx.reply(`Enlace a la serie: ${seriesLink}`);
+bot.hears('Series Mejor Puntuadas', async (ctx) => {
+    await fetchMoviesOrSeries('https://api.themoviedb.org/3/tv/top_rated', ctx, 'Series Mejor Puntuadas');
 });
 
-bot.on('text', (ctx) => {
-    ctx.reply(`Recibí tu mensaje: ${ctx.message.text}`);
-});
+// Resto del código...
 
 bot.launch();
